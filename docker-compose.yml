@@ -1,0 +1,39 @@
+version: '2'
+
+services:
+  drone-server:
+    container_name: drone-server
+    image: drone/drone:0.8.5
+    ports:
+      - 8000:8000
+      - 9000
+    volumes:
+      - /var/lib/drone:/var/lib/drone/
+    restart: always
+    environment:
+      - DRONE_ADMIN=samclement
+      - DRONE_OPEN=false
+      - DRONE_HOST=https://drone.swhurl.com
+      - DRONE_SECRET=${DRONE_SECRET}
+      - DRONE_GITHUB=true
+      - DRONE_GITHUB_CLIENT=${DRONE_GITHUB_CLIENT}
+      - DRONE_GITHUB_SECRET=${DRONE_GITHUB_SECRET}
+      - PLUGIN_FILTER=plugins/* bradrydzewski/* docker:dind docker:*
+
+  drone-agent:
+    container_name: drone-agent
+    image: drone/agent:0.8.5
+    command: agent
+    restart: always
+    depends_on:
+      - drone-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_SERVER=drone-server:9000
+      - DRONE_SECRET=${DRONE_SECRET}
+
+networks:
+  default:
+    external:
+      name: swhurl
